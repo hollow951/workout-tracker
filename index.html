@@ -132,9 +132,9 @@
   </div>
 
   <script>
-    // This array holds all logged workouts while the page is open.
-    // It resets when you refresh — we'll fix that in Step 2.
-    let workouts = [];
+    // Load saved workouts from localStorage, or start with an empty array.
+    // JSON.parse converts the saved text back into a JavaScript array.
+    let workouts = JSON.parse(localStorage.getItem('workouts')) || [];
 
     // Grab references to the HTML elements we'll interact with.
     const form = document.getElementById('workout-form');
@@ -157,12 +157,19 @@
       // Add this workout object to our array.
       workouts.push(workout);
 
+      // Save the updated array to localStorage.
+      // JSON.stringify converts the array into text so localStorage can store it.
+      localStorage.setItem('workouts', JSON.stringify(workouts));
+
       // Re-draw the list on screen.
       renderList();
 
       // Clear the form fields so it's ready for the next entry.
       form.reset();
     });
+
+    // Draw the list immediately on page load so saved workouts appear right away.
+    renderList();
 
     // This function redraws the workout list based on the current array.
     function renderList() {
