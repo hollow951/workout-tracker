@@ -110,6 +110,17 @@
   <div class="container">
     <h1>Workout Tracker</h1>
 
+    <div id="streak-box" style="
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      padding: 16px 24px;
+      margin-bottom: 24px;
+      font-size: 1rem;
+    ">
+      Streak: <strong id="streak-count">0</strong> day(s) in a row
+    </div>
+
     <form id="workout-form">
       <label for="exercise">Exercise Name</label>
       <input type="text" id="exercise" placeholder="e.g. Bench Press" required />
@@ -161,15 +172,57 @@
       // JSON.stringify converts the array into text so localStorage can store it.
       localStorage.setItem('workouts', JSON.stringify(workouts));
 
-      // Re-draw the list on screen.
+      // Re-draw the list and streak on screen.
       renderList();
+      renderStreak();
 
       // Clear the form fields so it's ready for the next entry.
       form.reset();
     });
 
-    // Draw the list immediately on page load so saved workouts appear right away.
+    // Draw the list and streak immediately on page load.
     renderList();
+    renderStreak();
+
+    // This function calculates and displays the current streak.
+    function renderStreak() {
+      // Get all unique dates from logged workouts and sort them newest first.
+      const uniqueDates = [...new Set(workouts.map(w => w.date))].sort().reverse();
+
+      if (uniqueDates.length === 0) {
+        document.getElementById('streak-count').textContent = 0;
+        return;
+      }
+
+      // Today's date as a YYYY-MM-DD string (same format as the date input).
+      const today = new Date().toISOString().split('T')[0];
+
+      // The streak only counts if the most recent workout was today or yesterday.
+      // If the last workout was 2+ days ago, the streak is broken.
+      const msPerDay = 24 * 60 * 60 * 1000;
+      const daysDiff = Math.round((new Date(today) - new Date(uniqueDates[0])) / msPerDay);
+
+      if (daysDiff > 1) {
+        document.getElementById('streak-count').textContent = 0;
+        return;
+      }
+
+      // Count consecutive days going back from the most recent date.
+      let streak = 1;
+      for (let i = 0; i < uniqueDates.length - 1; i++) {
+        const current = new Date(uniqueDates[i]);
+        const previous = new Date(uniqueDates[i + 1]);
+        const gap = Math.round((current - previous) / msPerDay);
+
+        if (gap === 1) {
+          streak++;
+        } else {
+          break; // Gap in days — streak is over
+        }
+      }
+
+      document.getElementById('streak-count').textContent = streak;
+    }
 
     // This function redraws the workout list based on the current array.
     function renderList() {
